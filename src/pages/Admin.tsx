@@ -32,7 +32,7 @@ const Admin = () => {
       return response.data;
     },
     onSuccess: () => {
-      toast.success('PPD file uploaded and processing started.');
+      toast.success('Official Records file uploaded and processing started.');
       setFile(null);
       queryClient.invalidateQueries({ queryKey: ['ppd-uploads'] });
     },
@@ -55,7 +55,7 @@ const Admin = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Admin / PPD Management</h1>
+      <h1 className="text-2xl font-bold mb-6">Admin / Official Records</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Upload Form */}
@@ -63,7 +63,7 @@ const Admin = () => {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <FontAwesomeIcon icon={faUpload} className="text-primary-500" />
-              Upload PPD Data
+              Upload Official Records
             </h2>
             <form onSubmit={handleUpload} className="space-y-4">
               <div>

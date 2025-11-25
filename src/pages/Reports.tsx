@@ -47,6 +47,23 @@ const ConfidenceBadge = ({ score }: { score: number }) => {
   );
 };
 
+const RiskBadge = ({ level }: { level?: string }) => {
+  const styles: Record<string, string> = {
+    CRITICAL: 'bg-red-100 text-red-800 border-red-200 font-bold',
+    HIGH: 'bg-orange-100 text-orange-800 border-orange-200 font-semibold',
+    MEDIUM: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    LOW: 'bg-blue-100 text-blue-800 border-blue-200',
+  };
+  
+  if (!level) return <span className="text-slate-400">-</span>;
+
+  return (
+    <span className={clsx("px-2.5 py-0.5 rounded-full text-xs border", styles[level] || 'bg-slate-100')}>
+      {level}
+    </span>
+  );
+};
+
 const Reports = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [minConfidence, setMinConfidence] = useState(0);
@@ -162,8 +179,8 @@ const Reports = () => {
                 <th className="px-6 py-4">Property Address</th>
                 <th className="px-6 py-4">Client Name</th>
                 <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Confidence</th>
-                <th className="px-6 py-4">PPD Price</th>
+                <th className="px-6 py-4">Risk Level</th>
+                <th className="px-6 py-4">Official Price</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -186,7 +203,10 @@ const Reports = () => {
                       <StatusBadge status={report.verification_status} />
                     </td>
                     <td className="px-6 py-4">
-                      <ConfidenceBadge score={report.confidence_score} />
+                      <div className="flex flex-col gap-1">
+                        <RiskBadge level={report.risk_level} />
+                        <span className="text-xs text-slate-400">{(report.confidence_score * 100).toFixed(0)}% Match</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
                       {report.ppd_price ? `£${report.ppd_price.toLocaleString()}` : '-'}
@@ -194,14 +214,22 @@ const Reports = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         {report.verification_status === 'suspicious' && (
-                          <button 
-                            onClick={() => handleVerify(report.id)}
-                            className="text-primary-600 hover:text-primary-800 p-1"
-                            title="Verify with Land Registry"
-                            disabled={verifyMutation.isPending}
-                          >
-                            <FontAwesomeIcon icon={faCheckCircle} />
-                          </button>
+                          <>
+                            {(report.risk_level === 'CRITICAL' || report.risk_level === 'HIGH') ? (
+                               <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded border border-green-100 flex items-center gap-1">
+                                 <FontAwesomeIcon icon={faCheckCircle} /> Verified
+                               </span>
+                            ) : (
+                              <button 
+                                onClick={() => handleVerify(report.id)}
+                                className="bg-primary-50 text-primary-600 hover:bg-primary-100 px-3 py-1 rounded text-xs font-medium transition-colors border border-primary-200"
+                                title="Verify with Land Registry"
+                                disabled={verifyMutation.isPending}
+                              >
+                                Dig Deeper
+                              </button>
+                            )}
+                          </>
                         )}
                         <button className="text-slate-400 hover:text-slate-600 p-1" title="View Details">
                           <FontAwesomeIcon icon={faEye} />

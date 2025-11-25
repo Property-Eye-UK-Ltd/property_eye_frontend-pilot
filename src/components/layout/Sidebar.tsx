@@ -19,7 +19,7 @@ const Sidebar = () => {
     { path: '/', label: 'Dashboard', icon: faChartLine },
     { path: '/upload', label: 'Upload Listings', icon: faFileUpload },
     { path: '/reports', label: 'Fraud Reports', icon: faExclamationTriangle },
-    { path: '/admin', label: 'Admin / PPD', icon: faCog },
+    { path: '/admin', label: 'Admin / Official Records', icon: faCog },
   ];
 
   return (

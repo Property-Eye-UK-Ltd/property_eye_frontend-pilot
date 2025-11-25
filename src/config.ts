@@ -14,6 +14,7 @@ export const ENDPOINTS = {
   },
   DOCUMENTS: {
     UPLOAD: '/documents/upload',
+    LISTINGS: '/documents/listings',
   },
   FRAUD: {
     SCAN: '/fraud/scan',

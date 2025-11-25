@@ -24,6 +24,7 @@ export interface FraudReport {
   ppd_full_address?: string;
   confidence_score: number;
   address_similarity: number;
+  risk_level?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   verification_status: 'suspicious' | 'confirmed_fraud' | 'not_fraud' | 'error';
   verified_owner_name?: string;
   is_confirmed_fraud: boolean;
@@ -55,4 +56,14 @@ export interface VerificationResponse {
   confirmed_fraud: number;
   not_fraud: number;
   errors: number;
+}
+
+export interface PropertyListing {
+  id: string;
+  address: string;
+  postcode: string;
+  client_name: string;
+  status: string;
+  withdrawn_date: string;
+  created_at: string;
 }
