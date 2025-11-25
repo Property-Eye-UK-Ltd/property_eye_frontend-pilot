@@ -47,7 +47,8 @@ const Admin = () => {
 
     const formData = new FormData();
     formData.append('year', year.toString());
-    formData.append('month', month.toString());
+    // Month is no longer required by backend, but we can send 0 or omit it.
+    // Backend expects year only now.
     formData.append('file', file);
 
     uploadMutation.mutate(formData);
@@ -77,18 +78,7 @@ const Admin = () => {
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-primary-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Month</label>
-                <select 
-                  value={month} 
-                  onChange={(e) => setMonth(Number(e.target.value))}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-primary-500"
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                    <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Month selection removed as per requirement */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">CSV File</label>
                 <input 
@@ -141,7 +131,7 @@ const Admin = () => {
                           {new Date(job.uploaded_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-3 font-medium text-slate-900">{job.filename}</td>
-                        <td className="px-6 py-3 text-slate-600">{job.month}/{job.year}</td>
+                        <td className="px-6 py-3 text-slate-600">{job.year}</td>
                         <td className="px-6 py-3">
                           <span className={clsx(
                             "px-2 py-1 rounded-full text-xs font-medium capitalize",
