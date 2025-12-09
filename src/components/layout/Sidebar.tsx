@@ -1,32 +1,33 @@
-import { Link, useLocation } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faChartLine, 
-  faFileUpload, 
-  faExclamationTriangle, 
+import { Link, useLocation } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faChartLine,
+  faFileUpload,
+  faExclamationTriangle,
   faCog,
   faBuilding,
-  faSignOutAlt
-} from '@fortawesome/free-solid-svg-icons';
-import clsx from 'clsx';
-import { useAuth } from '../../context/AuthContext';
+  faSignOutAlt,
+} from "@fortawesome/free-solid-svg-icons";
+import clsx from "clsx";
+import { useAuth } from "../../context/AuthContext";
 
 const Sidebar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: faChartLine },
-    { path: '/upload', label: 'Upload Listings', icon: faFileUpload },
-    { path: '/reports', label: 'Fraud Reports', icon: faExclamationTriangle },
-    { path: '/admin', label: 'Admin / Official Records', icon: faCog },
+    { path: "/", label: "Dashboard", icon: faChartLine },
+    { path: "/upload", label: "Upload Listings", icon: faFileUpload },
+    { path: "/reports", label: "Fraud Reports", icon: faExclamationTriangle },
+    { path: "/admin", label: "Admin / Official Records", icon: faCog },
+    { path: "/admin/alto", label: "Alto Integration", icon: faBuilding },
   ];
 
   return (
     <div className="h-screen w-64 bg-slate-900 text-white flex flex-col fixed left-0 top-0 z-50">
       <div className="p-6 border-b border-slate-800 flex items-center gap-3">
         <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-white">
-            <FontAwesomeIcon icon={faBuilding} />
+          <FontAwesomeIcon icon={faBuilding} />
         </div>
         <span className="text-xl font-bold tracking-tight">Property Eye</span>
       </div>
@@ -51,10 +52,12 @@ const Sidebar = () => {
 
       <div className="p-4 border-t border-slate-800 space-y-4">
         <div className="bg-slate-800 rounded-lg p-4">
-            <p className="text-xs text-slate-400 mb-1">Current Agency</p>
-            <p className="text-sm font-semibold truncate">{user?.agency_name || 'Loading...'}</p>
+          <p className="text-xs text-slate-400 mb-1">Current Agency</p>
+          <p className="text-sm font-semibold truncate">
+            {user?.agency_name || "Loading..."}
+          </p>
         </div>
-        <button 
+        <button
           onClick={logout}
           className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors text-sm font-medium"
         >
