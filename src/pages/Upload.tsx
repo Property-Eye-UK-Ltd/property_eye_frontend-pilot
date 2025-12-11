@@ -12,6 +12,7 @@ import {
   faPlus,
   faTimes,
   faTable,
+  faBuilding,
   faPencilAlt,
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
@@ -32,6 +33,7 @@ const REQUIRED_FIELDS = [
 
 const Upload = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isIntegrationsModalOpen, setIsIntegrationsModalOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -241,13 +243,22 @@ const Upload = () => {
             Manage your agency's property listings.
           </p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-        >
-          <FontAwesomeIcon icon={faPlus} />
-          Add New Listing
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsIntegrationsModalOpen(true)}
+            className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            Integrations
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            Add New Listing
+          </button>
+        </div>
       </div>
 
       {/* Listings Table */}
@@ -262,12 +273,13 @@ const Upload = () => {
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Withdrawn Date</th>
                 <th className="px-6 py-4">Uploaded At</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center">
+                  <td colSpan={7} className="px-6 py-8 text-center">
                     <FontAwesomeIcon
                       icon={faSpinner}
                       spin
@@ -278,7 +290,7 @@ const Upload = () => {
               ) : listings?.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-12 text-center text-slate-500"
                   >
                     <div className="flex flex-col items-center gap-3">
@@ -296,35 +308,160 @@ const Upload = () => {
                   </td>
                 </tr>
               ) : (
-                listings?.map((listing) => (
-                  <tr
-                    key={listing.id}
-                    className="hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 font-medium text-slate-900">
-                      {listing.address}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {listing.postcode}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {listing.client_name}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">
-                        {listing.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      {listing.withdrawn_date
-                        ? new Date(listing.withdrawn_date).toLocaleDateString()
-                        : "-"}
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">
-                      {new Date(listing.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
+                listings?.map((listing) => {
+                  const isEditing = editingId === listing.id;
+
+                  return (
+                    <tr
+                      key={listing.id}
+                      className="hover:bg-slate-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-medium text-slate-900">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.address || ""}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                address: e.target.value,
+                              })
+                            }
+                            className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                            placeholder="Address"
+                          />
+                        ) : (
+                          listing.address
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.postcode || ""}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                postcode: e.target.value,
+                              })
+                            }
+                            className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                            placeholder="Postcode"
+                          />
+                        ) : (
+                          listing.postcode
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.client_name || ""}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                client_name: e.target.value,
+                              })
+                            }
+                            className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                            placeholder="Client Name"
+                          />
+                        ) : (
+                          listing.client_name
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editData.status || ""}
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                status: e.target.value,
+                              })
+                            }
+                            className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                            placeholder="Status"
+                          />
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">
+                            {listing.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {isEditing ? (
+                          <input
+                            type="date"
+                            value={
+                              editData.withdrawn_date
+                                ? new Date(editData.withdrawn_date)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : ""
+                            }
+                            onChange={(e) =>
+                              setEditData({
+                                ...editData,
+                                withdrawn_date: e.target.value,
+                              })
+                            }
+                            className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+                          />
+                        ) : listing.withdrawn_date ? (
+                          new Date(listing.withdrawn_date).toLocaleDateString()
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 text-xs">
+                        {new Date(listing.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {isEditing ? (
+                            <>
+                              <button
+                                onClick={() => handleSave(listing.id)}
+                                className="text-green-600 hover:text-green-700 p-1"
+                                title="Save"
+                                disabled={updateMutation.isPending}
+                              >
+                                <FontAwesomeIcon icon={faCheck} />
+                              </button>
+                              <button
+                                onClick={handleCancel}
+                                className="text-slate-400 hover:text-slate-600 p-1"
+                                title="Cancel"
+                              >
+                                <FontAwesomeIcon icon={faTimes} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleEdit(listing)}
+                                className="text-blue-500 hover:text-blue-700 p-1"
+                                title="Edit"
+                              >
+                                <FontAwesomeIcon icon={faPencilAlt} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(listing.id)}
+                                className="text-red-500 hover:text-red-700 p-1"
+                                title="Delete"
+                                disabled={deleteMutation.isPending}
+                              >
+                                <FontAwesomeIcon icon={faTimes} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -506,6 +643,178 @@ const Upload = () => {
           </div>
         </div>
       )}
+
+      {/* Integrations Modal */}
+      {isIntegrationsModalOpen && (
+        <IntegrationsModal
+          isOpen={isIntegrationsModalOpen}
+          onClose={() => setIsIntegrationsModalOpen(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["listings"] });
+            setIsIntegrationsModalOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// Integrations Modal Component
+interface IntegrationsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const IntegrationsModal = ({
+  isOpen,
+  onClose,
+  onSuccess,
+}: IntegrationsModalProps) => {
+  const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
+    null
+  );
+  const [isImporting, setIsImporting] = useState(false);
+
+  const integrations = [
+    {
+      id: "alto",
+      name: "Alto (Zoopla)",
+      description: "Import properties from your Alto/Zoopla account",
+      icon: faBuilding,
+      available: true,
+    },
+  ];
+
+  const handleImport = async () => {
+    if (!selectedIntegration) {
+      toast.error("Please select an integration");
+      return;
+    }
+
+    if (selectedIntegration === "alto") {
+      setIsImporting(true);
+      try {
+        const response = await api.post(ENDPOINTS.INTEGRATIONS.ALTO_IMPORT);
+        const data = response.data;
+
+        toast.success(
+          data.message ||
+            `Successfully imported ${data.properties_imported} properties from Alto`
+        );
+
+        if (data.errors && data.errors.length > 0) {
+          data.errors.forEach((error: string) => toast.error(error));
+        }
+
+        onSuccess();
+      } catch (error: any) {
+        console.error("Import error:", error);
+        const errorMessage =
+          error.response?.data?.detail || "Failed to import from Alto";
+        toast.error(errorMessage);
+      } finally {
+        setIsImporting(false);
+      }
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full animate-in fade-in zoom-in duration-200">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+          <h2 className="text-xl font-bold">Import from Integrations</h2>
+          <button
+            onClick={onClose}
+            disabled={isImporting}
+            className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors disabled:opacity-50"
+          >
+            <FontAwesomeIcon icon={faTimes} className="text-lg" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          <p className="text-sm text-slate-600 mb-4">
+            Select an integration to import properties from:
+          </p>
+
+          <div className="space-y-3">
+            {integrations.map((integration) => (
+              <button
+                key={integration.id}
+                onClick={() => setSelectedIntegration(integration.id)}
+                disabled={!integration.available || isImporting}
+                className={clsx(
+                  "w-full text-left p-4 rounded-lg border-2 transition-all",
+                  selectedIntegration === integration.id
+                    ? "border-primary-500 bg-primary-50"
+                    : "border-slate-200 hover:border-slate-300 bg-white",
+                  !integration.available && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={clsx(
+                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      selectedIntegration === integration.id
+                        ? "bg-primary-100 text-primary-600"
+                        : "bg-slate-100 text-slate-600"
+                    )}
+                  >
+                    <FontAwesomeIcon
+                      icon={integration.icon}
+                      className="text-lg"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-slate-900 mb-1">
+                      {integration.name}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {integration.description}
+                    </p>
+                  </div>
+                  {selectedIntegration === integration.id && (
+                    <FontAwesomeIcon
+                      icon={faCheckCircle}
+                      className="text-primary-600 text-xl"
+                    />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              disabled={isImporting}
+              className="px-4 py-2 text-slate-700 font-medium hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleImport}
+              disabled={!selectedIntegration || isImporting}
+              className="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isImporting ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} spin />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faCloudUploadAlt} />
+                  Import Properties
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

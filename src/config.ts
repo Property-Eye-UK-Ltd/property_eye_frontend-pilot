@@ -35,4 +35,7 @@ export const ENDPOINTS = {
   ADMIN: {
     ALTO_AGENCIES: "/admin/alto-agencies",
   },
+  INTEGRATIONS: {
+    ALTO_IMPORT: "/integrations/alto/import",
+  },
 };
