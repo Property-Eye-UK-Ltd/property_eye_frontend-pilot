@@ -16,10 +16,14 @@ export const ENDPOINTS = {
   DOCUMENTS: {
     UPLOAD: "/documents/upload",
     LISTINGS: "/documents/listings",
+    UPDATE_LISTING: (id: string) => `/documents/listings/${id}`,
+    DELETE_LISTING: (id: string) => `/documents/listings/${id}`,
   },
   FRAUD: {
     SCAN: "/fraud/scan",
     REPORTS: "/fraud/reports",
+    UPDATE_REPORT: (id: string) => `/fraud/reports/${id}`,
+    DELETE_REPORT: (id: string) => `/fraud/reports/${id}`,
   },
   VERIFICATION: {
     VERIFY: "/verification/verify",
