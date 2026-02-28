@@ -52,10 +52,24 @@ export interface PPDJob {
   processed_at?: string;
 }
 
-export interface VerificationResponse {
-  confirmed_fraud: number;
-  not_fraud: number;
-  errors: number;
+export interface VerificationResult {
+  match_id: string;
+  property_address: string;
+  client_name: string;
+  verification_status: 'confirmed_fraud' | 'not_fraud' | 'error';
+  verified_owner_name: string | null;
+  is_confirmed_fraud: boolean;
+  verified_at: string;
+  error_message: string | null;
+}
+
+export interface VerificationSummary {
+  total_verified: number;
+  confirmed_fraud_count: number;
+  not_fraud_count: number;
+  error_count: number;
+  results: VerificationResult[];
+  message: string;
 }
 
 export interface PropertyListing {

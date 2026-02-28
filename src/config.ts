@@ -27,6 +27,7 @@ export const ENDPOINTS = {
   },
   VERIFICATION: {
     VERIFY: "/verification/verify",
+    STATUS: (id: string) => `/verification/status/${id}`,
   },
   PPD: {
     UPLOAD: "/ppd/upload",

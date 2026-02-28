@@ -245,6 +245,17 @@ const Upload = () => {
         </div>
         <div className="flex gap-3">
           <button
+            onClick={handleScan}
+            disabled={isScanning}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FontAwesomeIcon
+              icon={isScanning ? faSpinner : faSearch}
+              spin={isScanning}
+            />
+            {isScanning ? "Scanning..." : "Rescan Listings"}
+          </button>
+          <button
             onClick={() => setIsIntegrationsModalOpen(true)}
             className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
           >
