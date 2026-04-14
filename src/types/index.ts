@@ -75,9 +75,16 @@ export interface VerificationSummary {
 export interface PropertyListing {
   id: string;
   address: string;
-  postcode: string;
-  client_name: string;
-  status: string;
-  withdrawn_date: string;
+  postcode: string | null;
+  region: string | null;
+  county: string | null;
+  property_number: string | null;
+  title_number: string | null;
+  client_name: string | null;
+  status: string | null;
+  withdrawn_date: string | null;
+  price: string | null;
+  commission: string | null;
+  contract_duration: string | null;
   created_at: string;
 }

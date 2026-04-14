@@ -15,6 +15,7 @@ export const ENDPOINTS = {
   },
   DOCUMENTS: {
     UPLOAD: "/documents/upload",
+    INGEST: "/documents/ingest",
     LISTINGS: "/documents/listings",
     UPDATE_LISTING: (id: string) => `/documents/listings/${id}`,
     DELETE_LISTING: (id: string) => `/documents/listings/${id}`,

@@ -86,6 +86,15 @@ const Admin = () => {
     e.preventDefault();
     if (!file) return;
 
+    // Check if an upload for the selected year already exists
+    const existingUpload = uploads?.find((job) => job.year === year);
+    if (existingUpload) {
+      toast.error(`An official record for the year ${year} already exists. Please delete it first before uploading a new one.`, {
+        duration: 5000,
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append('year', year.toString());
     formData.append('file', file);
