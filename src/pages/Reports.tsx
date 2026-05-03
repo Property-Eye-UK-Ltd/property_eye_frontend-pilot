@@ -106,8 +106,10 @@ const VerificationDetailModal = ({
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 bg-slate-50 rounded-xl p-4">
             <span className="text-slate-500">Property</span>
             <span className="font-medium">{result.property_address}</span>
-            <span className="text-slate-500">Client Name</span>
-            <span className="font-medium">{result.client_name}</span>
+            <span className="text-slate-500">Buyer (client)</span>
+            <span className="font-medium">{result.client_name ?? "—"}</span>
+            <span className="text-slate-500">Vendor</span>
+            <span className="font-medium">{result.vendor_name ?? "—"}</span>
             <span className="text-slate-500">Outcome</span>
             <span>
               <StatusBadge status={result.verification_status} />
@@ -386,7 +388,8 @@ const Reports = () => {
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
               <tr>
                 <th className="px-6 py-4">Property Address</th>
-                <th className="px-6 py-4">Client Name</th>
+                <th className="px-6 py-4">Buyer (client)</th>
+                <th className="px-6 py-4">Vendor</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Risk Level</th>
                 <th className="px-6 py-4">Official Price</th>
@@ -397,7 +400,7 @@ const Reports = () => {
               {reports?.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-6 py-8 text-center text-slate-500"
                   >
                     No reports found matching your filters.
@@ -463,11 +466,11 @@ const Reports = () => {
                               })
                             }
                             className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                            placeholder="Client Name"
+                            placeholder="Buyer (client) name"
                           />
                         ) : (
                           <>
-                            {report.client_name}
+                            {report.client_name ?? "—"}
                             {/* Show verified owner name if verification ran */}
                             {(latestResult?.verified_owner_name ||
                               report.verified_owner_name) && (
@@ -479,6 +482,10 @@ const Reports = () => {
                             )}
                           </>
                         )}
+                      </td>
+
+                      <td className="px-6 py-4 text-slate-600">
+                        <span className="text-slate-800">{report.vendor_name ?? "—"}</span>
                       </td>
 
                       <td className="px-6 py-4">
@@ -560,6 +567,7 @@ const Reports = () => {
                                         property_address:
                                           report.property_address,
                                         client_name: report.client_name,
+                                        vendor_name: report.vendor_name ?? null,
                                         verification_status:
                                           report.verification_status as any,
                                         verified_owner_name:

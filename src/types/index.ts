@@ -15,7 +15,8 @@ export interface FraudReport {
   id: string;
   property_listing_id: string;
   property_address: string;
-  client_name: string;
+  client_name: string | null;
+  vendor_name?: string | null;
   withdrawn_date: string;
   ppd_transaction_id?: string;
   ppd_price?: number;
@@ -55,7 +56,8 @@ export interface PPDJob {
 export interface VerificationResult {
   match_id: string;
   property_address: string;
-  client_name: string;
+  client_name: string | null;
+  vendor_name?: string | null;
   verification_status: 'confirmed_fraud' | 'not_fraud' | 'error';
   verified_owner_name: string | null;
   is_confirmed_fraud: boolean;
@@ -81,6 +83,7 @@ export interface PropertyListing {
   property_number: string | null;
   title_number: string | null;
   client_name: string | null;
+  vendor_name: string | null;
   status: string | null;
   withdrawn_date: string | null;
   price: string | null;

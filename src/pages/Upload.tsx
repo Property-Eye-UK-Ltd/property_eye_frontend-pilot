@@ -52,6 +52,7 @@ const Upload = () => {
     property_number: "",
     title_number: "",
     client_name: "",
+    vendor_name: "",
     status: "withdrawn",
     withdrawn_date: "",
     price: "",
@@ -183,6 +184,7 @@ const Upload = () => {
       property_number: listing.property_number,
       title_number: listing.title_number,
       client_name: listing.client_name,
+      vendor_name: listing.vendor_name,
       status: listing.status,
       withdrawn_date: listing.withdrawn_date,
       price: listing.price,
@@ -281,7 +283,8 @@ const Upload = () => {
                 <th className="px-4 py-3">Postcode</th>
                 <th className="px-4 py-3">Region/County</th>
                 <th className="px-4 py-3">Ref</th>
-                <th className="px-4 py-3">Client</th>
+                <th className="px-4 py-3">Buyer (client)</th>
+                <th className="px-4 py-3">Vendor</th>
                 <th className="px-4 py-3">Price/Commission</th>
                 <th className="px-4 py-3">Withdrawn</th>
                 <th className="px-4 py-3 text-right">Actions</th>
@@ -290,7 +293,7 @@ const Upload = () => {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center">
+                  <td colSpan={9} className="px-6 py-8 text-center">
                     <FontAwesomeIcon icon={faSpinner} spin className="text-primary-500 text-xl" />
                   </td>
                 </tr>
@@ -327,7 +330,12 @@ const Upload = () => {
                           </>
                         )}
                       </td>
-                      <td className="px-4 py-3">{editing ? renderCellInput("client_name") : listing.client_name || "-"}</td>
+                      <td className="px-4 py-3">
+                        {editing ? renderCellInput("client_name") : listing.client_name || "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {editing ? renderCellInput("vendor_name") : listing.vendor_name || "—"}
+                      </td>
                       <td className="px-4 py-3">
                         {editing ? (
                           <div className="space-y-1">
@@ -393,7 +401,7 @@ const Upload = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                  <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
                         <FontAwesomeIcon icon={faTable} className="text-xl" />
@@ -540,14 +548,14 @@ const Upload = () => {
               </div>
               <h2 className="text-xl font-bold mb-2">HMLR Verification</h2>
               <p className="text-slate-500 text-sm mb-2">
-                This will run the full HM Flow for:
+                This will verify directly with HMLR for:
               </p>
               <p className="font-medium text-slate-800 text-sm bg-slate-50 rounded-lg px-3 py-2 mb-4 break-words">
                 {verifyListingAddress}
               </p>
               <p className="text-slate-500 text-xs mb-6">
-                The system will scan for suspicious PPD matches and then verify
-                ownership directly via HM Land Registry. This may take a moment.
+                This bypasses PPD screening and checks the listing directly via
+                HM Land Registry. This may take a moment.
               </p>
               <div className="flex justify-center gap-3">
                 <button
@@ -569,9 +577,9 @@ const Upload = () => {
                     </>
                   ) : (
                     <>
-                      <FontAwesomeIcon icon={faShield} />
-                      Run HM Flow
-                    </>
+                        <FontAwesomeIcon icon={faShield} />
+                        Verify via HMLR
+                      </>
                   )}
                 </button>
               </div>
@@ -639,7 +647,9 @@ const Upload = () => {
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium text-slate-900">{r.property_address}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">Client: {r.client_name}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Buyer: {r.client_name ?? "—"} · Vendor: {r.vendor_name ?? "—"}
+                          </p>
                           {r.verified_owner_name && (
                             <p className="text-xs text-slate-500 mt-0.5">
                               Registered owner: <span className="font-medium">{r.verified_owner_name}</span>
