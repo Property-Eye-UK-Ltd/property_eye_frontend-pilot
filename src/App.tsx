@@ -9,11 +9,13 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
+import LoadingScreen from "./components/layout/LoadingScreen";
+
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>; // Or a proper loading spinner
+    return <LoadingScreen />;
   }
 
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;

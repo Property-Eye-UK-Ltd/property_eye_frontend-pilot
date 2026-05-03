@@ -10,7 +10,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Poppins', sans-serif;">
+        <div style="position: relative; width: 80px; height: 80px; margin: 0 auto 24px;">
+          <div style="position: absolute; inset: 0; border: 2px solid #0ea5e920; border-radius: 50%; animation: spin 4s linear infinite;"></div>
+          <div style="position: absolute; inset: 8px; border: 2px solid #0ea5e9; border-radius: 50%; border-right-color: transparent; animation: spin 1s linear infinite;"></div>
+        </div>
+        <div style="text-align: center;">
+          <h1 style="color: white; font-size: 24px; font-weight: 700; letter-spacing: 0.3em; margin: 0; text-transform: uppercase;">Property Eye</h1>
+          <div style="height: 1px; width: 100px; background: linear-gradient(90deg, transparent, #0ea5e9, transparent); margin: 12px auto;"></div>
+        </div>
+      </div>
+      <style>
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

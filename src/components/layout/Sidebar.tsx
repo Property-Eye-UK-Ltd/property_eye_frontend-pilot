@@ -32,7 +32,7 @@ const Sidebar = () => {
         <span className="text-xl font-bold tracking-tight">Property Eye</span>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navItems.map((item) => (
           <Link
             key={item.path}
