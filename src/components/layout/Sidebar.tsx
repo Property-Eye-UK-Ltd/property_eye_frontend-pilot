@@ -4,8 +4,6 @@ import {
   faChartLine,
   faFileUpload,
   faExclamationTriangle,
-  faCog,
-  faBuilding,
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
@@ -20,17 +18,17 @@ const Sidebar = () => {
     { path: "/", label: "Dashboard", icon: faChartLine },
     { path: "/upload", label: "Upload Listings", icon: faFileUpload },
     { path: "/reports", label: "Fraud Reports", icon: faExclamationTriangle },
-    { path: "/admin", label: "Admin / Official Records", icon: faCog },
-    { path: "/admin/alto", label: "Alto Integration", icon: faBuilding },
   ];
 
   return (
     <div className="h-screen w-64 bg-slate-900 text-white flex flex-col fixed left-0 top-0 z-50">
-      <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-        <div className="size-9 rounded-xl bg-white/5 p-1.5 ring-1 ring-white/10">
+      <div className="flex min-h-[76px] items-center gap-3 border-b border-slate-800 px-5 py-4">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/5 ring-1 ring-white/10">
           <PropertyEyeMark size="sm" />
         </div>
-        <span className="text-xl font-bold tracking-tight">Property Eye</span>
+        <span className="text-xl font-bold leading-none tracking-tight">
+          Property Eye
+        </span>
       </div>
 
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">

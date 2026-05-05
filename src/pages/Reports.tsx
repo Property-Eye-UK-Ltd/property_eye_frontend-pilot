@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,7 +10,6 @@ import {
   faEye,
   faFilter,
   faPencilAlt,
-  faShield,
   faSpinner,
   faTimes,
   faTimesCircle,
@@ -22,7 +21,6 @@ import {
   FraudReport,
   FraudReportGroup,
   VerificationResult,
-  VerificationSummary,
 } from "../types";
 import api from "../lib/axios";
 
@@ -98,7 +96,7 @@ const VerificationDetailModal = ({
         <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-2 text-lg font-semibold">
             {statusIcon}
-            Land Registry Verification
+            Verification Details
           </div>
           <button
             onClick={onClose}
@@ -140,7 +138,7 @@ const VerificationDetailModal = ({
 
           {result.verification_status === "confirmed_fraud" && (
             <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-xs font-medium text-red-800">
-              The name registered at HMLR matches the agency client — this sale
+              The registered owner name matches the agency client — this sale
               likely bypassed the agency.
             </div>
           )}
@@ -228,53 +226,6 @@ const Reports = () => {
     },
   });
 
-  const flatReports = useMemo(
-    () => reportGroups?.flatMap((group) => group.items) ?? [],
-    [reportGroups]
-  );
-
-  const verifyMutation = useMutation({
-    mutationFn: async (matchIds: string[]) => {
-      const response = await api.post<VerificationSummary>(
-        ENDPOINTS.VERIFICATION.VERIFY,
-        { match_ids: matchIds }
-      );
-      return response.data;
-    },
-    onSuccess: (data) => {
-      const byId: Record<string, VerificationResult> = {};
-      data.results.forEach((result) => {
-        byId[result.match_id] = result;
-      });
-      setVerifiedResults((prev) => ({ ...prev, ...byId }));
-
-      const parts: string[] = [];
-      if (data.confirmed_fraud_count > 0) {
-        parts.push(`${data.confirmed_fraud_count} confirmed fraud`);
-      }
-      if (data.not_fraud_count > 0) {
-        parts.push(`${data.not_fraud_count} cleared`);
-      }
-      if (data.error_count > 0) {
-        parts.push(`${data.error_count} error(s)`);
-      }
-
-      if (data.confirmed_fraud_count > 0) {
-        toast.error(`Verification complete: ${parts.join(", ")}.`);
-      } else {
-        toast.success(`Verification complete: ${parts.join(", ")}.`);
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["fraud-report-groups"] });
-    },
-    onError: (mutationError: any) => {
-      toast.error(
-        "Verification failed: " +
-          (mutationError.response?.data?.detail || mutationError.message)
-      );
-    },
-  });
-
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       const response = await api.patch(ENDPOINTS.FRAUD.UPDATE_REPORT(id), data);
@@ -317,10 +268,6 @@ const Reports = () => {
     }));
   };
 
-  const handleVerify = (id: string) => {
-    verifyMutation.mutate([id]);
-  };
-
   const handleEdit = (report: FraudReport) => {
     setEditingId(report.id);
     setEditData({
@@ -342,29 +289,6 @@ const Reports = () => {
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this fraud report?")) {
       deleteMutation.mutate(id);
-    }
-  };
-
-  const handleVerifyAllHighConfidence = () => {
-    const ids = flatReports
-      .filter(
-        (report) =>
-          report.confidence_score >= 85 &&
-          report.verification_status === "suspicious"
-      )
-      .map((report) => report.id);
-
-    if (ids.length === 0) {
-      toast("No high confidence suspicious matches to verify.", { icon: "ℹ️" });
-      return;
-    }
-
-    if (
-      confirm(
-        `Verify ${ids.length} high confidence matches? This will check Land Registry records.`
-      )
-    ) {
-      verifyMutation.mutate(ids);
     }
   };
 
@@ -397,18 +321,6 @@ const Reports = () => {
 
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Fraud Reports</h1>
-        <button
-          onClick={handleVerifyAllHighConfidence}
-          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-          disabled={verifyMutation.isPending}
-        >
-          {verifyMutation.isPending ? (
-            <FontAwesomeIcon icon={faSpinner} spin />
-          ) : (
-            <FontAwesomeIcon icon={faCheckCircle} />
-          )}
-          Verify High Confidence
-        </button>
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -670,18 +582,6 @@ const Reports = () => {
                                     </>
                                   ) : (
                                     <>
-                                      {report.verification_status === "suspicious" && (
-                                        <button
-                                          onClick={() => handleVerify(report.id)}
-                                          className="flex items-center gap-1 rounded border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-medium text-primary-600 transition-colors hover:bg-primary-100"
-                                          title="Verify with Land Registry"
-                                          disabled={verifyMutation.isPending}
-                                        >
-                                          <FontAwesomeIcon icon={faShield} />
-                                          Verify
-                                        </button>
-                                      )}
-
                                       {(latestResult ||
                                         (report.verification_status !==
                                           "suspicious" &&

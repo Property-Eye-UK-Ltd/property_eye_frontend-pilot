@@ -25,7 +25,7 @@ const PropertyEyeMark = ({
     <svg
       viewBox="0 0 120 120"
       aria-hidden="true"
-      className={`${sizeClasses[size]} ${className}`}
+      className={`block ${sizeClasses[size]} ${className}`}
     >
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">

@@ -7,13 +7,11 @@ import {
   faCheck,
   faCheckCircle,
   faCloudUploadAlt,
-  faEye,
   faExclamationTriangle,
   faKeyboard,
   faPencilAlt,
   faPlus,
   faSearch,
-  faShield,
   faSpinner,
   faTable,
   faTimes,
@@ -25,7 +23,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ENDPOINTS } from "../config";
 import api from "../lib/axios";
-import { PropertyListing, UploadStats, VerificationSummary, VerificationResult } from "../types";
+import { PropertyListing, UploadStats } from "../types";
 
 type UploadStep = "upload" | "uploading" | "success";
 
@@ -39,11 +37,6 @@ const Upload = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Record<string, any>>({});
-  // Manual HMLR verification state
-  const [verifyListingId, setVerifyListingId] = useState<string | null>(null);
-  const [verifyListingAddress, setVerifyListingAddress] = useState<string>("");
-  const [verifyResult, setVerifyResult] = useState<VerificationSummary | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [manualData, setManualData] = useState<Record<string, string>>({
     address: "",
     postcode: "",
@@ -207,30 +200,6 @@ const Upload = () => {
     />
   );
 
-  const handleVerifyClick = (listing: PropertyListing) => {
-    setVerifyListingId(listing.id);
-    setVerifyListingAddress(listing.address);
-    setVerifyResult(null);
-  };
-
-  const handleVerifyConfirm = async () => {
-    if (!verifyListingId) return;
-    setIsVerifying(true);
-    try {
-      const response = await api.post<VerificationSummary>(
-        ENDPOINTS.VERIFICATION.VERIFY_LISTING(verifyListingId)
-      );
-      setVerifyResult(response.data);
-      setVerifyListingId(null);
-      queryClient.invalidateQueries({ queryKey: ["listings"] });
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || "Verification failed");
-      setVerifyListingId(null);
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -372,14 +341,6 @@ const Upload = () => {
                             </>
                           ) : (
                             <>
-                              {/* HMLR Verify button */}
-                              <button
-                                onClick={() => handleVerifyClick(listing)}
-                                className="p-1 text-primary-600 transition-colors hover:text-primary-800"
-                                title="Verify via HMLR (HM Flow)"
-                              >
-                                <FontAwesomeIcon icon={faEye} />
-                              </button>
                               <button
                                 onClick={() => handleEdit(listing)}
                                 className="p-1 text-primary-600 hover:text-primary-800"
@@ -538,162 +499,6 @@ const Upload = () => {
         />
       )}
 
-      {/* HMLR Verification — Confirmation Modal */}
-      {verifyListingId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full animate-in fade-in zoom-in duration-200">
-            <div className="p-6 text-center">
-              <div className="mx-auto mb-4 flex w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-                <FontAwesomeIcon icon={faShield} className="text-3xl" />
-              </div>
-              <h2 className="text-xl font-bold mb-2">HMLR Verification</h2>
-              <p className="text-slate-500 text-sm mb-2">
-                This will verify directly with HMLR for:
-              </p>
-              <p className="font-medium text-slate-800 text-sm bg-slate-50 rounded-lg px-3 py-2 mb-4 break-words">
-                {verifyListingAddress}
-              </p>
-              <p className="text-slate-500 text-xs mb-6">
-                This bypasses PPD screening and checks the listing directly via
-                HM Land Registry. This may take a moment.
-              </p>
-              <div className="flex justify-center gap-3">
-                <button
-                  onClick={() => setVerifyListingId(null)}
-                  disabled={isVerifying}
-                  className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleVerifyConfirm}
-                  disabled={isVerifying}
-                  className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-60"
-                >
-                  {isVerifying ? (
-                    <>
-                      <FontAwesomeIcon icon={faSpinner} spin />
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                        <FontAwesomeIcon icon={faShield} />
-                        Verify via HMLR
-                      </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* HMLR Verification — Result Modal */}
-      {verifyResult && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                {verifyResult.confirmed_fraud_count > 0 ? (
-                  <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" />
-                ) : verifyResult.total_verified === 0 ? (
-                  <FontAwesomeIcon icon={faTimesCircle} className="text-slate-400" />
-                ) : (
-                  <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" />
-                )}
-                HMLR Verification Result
-              </div>
-              <button
-                onClick={() => setVerifyResult(null)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              {verifyResult.total_verified === 0 ? (
-                <div className="bg-slate-50 rounded-xl p-4 text-center text-slate-500 text-sm">
-                  {verifyResult.message}
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-                      <p className="text-2xl font-bold text-red-600">{verifyResult.confirmed_fraud_count}</p>
-                      <p className="text-xs text-red-500 mt-1">Confirmed Fraud</p>
-                    </div>
-                    <div className="bg-green-50 border border-green-100 rounded-xl p-3">
-                      <p className="text-2xl font-bold text-green-600">{verifyResult.not_fraud_count}</p>
-                      <p className="text-xs text-green-500 mt-1">Cleared</p>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                      <p className="text-2xl font-bold text-slate-500">{verifyResult.error_count}</p>
-                      <p className="text-xs text-slate-400 mt-1">Errors</p>
-                    </div>
-                  </div>
-
-                  {verifyResult.results.map((r: VerificationResult, i: number) => (
-                    <div
-                      key={i}
-                      className={clsx(
-                        "rounded-xl border p-3 text-sm",
-                        r.verification_status === "confirmed_fraud"
-                          ? "bg-red-50 border-red-200"
-                          : r.verification_status === "not_fraud"
-                          ? "bg-green-50 border-green-200"
-                          : "bg-slate-50 border-slate-200"
-                      )}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-slate-900">{r.property_address}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            Buyer: {r.client_name ?? "—"} · Vendor: {r.vendor_name ?? "—"}
-                          </p>
-                          {r.verified_owner_name && (
-                            <p className="text-xs text-slate-500 mt-0.5">
-                              Registered owner: <span className="font-medium">{r.verified_owner_name}</span>
-                            </p>
-                          )}
-                        </div>
-                        <span
-                          className={clsx(
-                            "px-2 py-0.5 rounded-full text-xs font-medium border shrink-0 ml-2",
-                            r.verification_status === "confirmed_fraud"
-                              ? "bg-red-100 text-red-700 border-red-200"
-                              : r.verification_status === "not_fraud"
-                              ? "bg-green-100 text-green-700 border-green-200"
-                              : "bg-slate-100 text-slate-600 border-slate-200"
-                          )}
-                        >
-                          {r.verification_status === "confirmed_fraud"
-                            ? "Fraud"
-                            : r.verification_status === "not_fraud"
-                            ? "Cleared"
-                            : "Error"}
-                        </span>
-                      </div>
-                      {r.error_message && (
-                        <p className="text-xs text-red-600 mt-1">{r.error_message}</p>
-                      )}
-                    </div>
-                  ))}
-
-                  <p className="text-xs text-slate-400 text-center">{verifyResult.message}</p>
-                </>
-              )}
-            </div>
-            <div className="p-4 pt-0">
-              <button
-                onClick={() => setVerifyResult(null)}
-                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 rounded-xl text-sm transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
