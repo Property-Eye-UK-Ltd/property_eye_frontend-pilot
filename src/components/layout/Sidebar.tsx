@@ -10,6 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
 import { useAuth } from "../../context/AuthContext";
+import PropertyEyeMark from "./PropertyEyeMark";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -26,8 +27,8 @@ const Sidebar = () => {
   return (
     <div className="h-screen w-64 bg-slate-900 text-white flex flex-col fixed left-0 top-0 z-50">
       <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-        <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-white">
-          <FontAwesomeIcon icon={faBuilding} />
+        <div className="size-9 rounded-xl bg-white/5 p-1.5 ring-1 ring-white/10">
+          <PropertyEyeMark size="sm" />
         </div>
         <span className="text-xl font-bold tracking-tight">Property Eye</span>
       </div>

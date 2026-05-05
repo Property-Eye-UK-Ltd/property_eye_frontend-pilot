@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropertyEyeMark from './PropertyEyeMark';
 
 const StatusMessenger = () => {
   const [index, setIndex] = useState(0);
@@ -43,58 +44,13 @@ const LoadingScreen: React.FC = () => {
       </div>
 
       {/* Glassmorphic Container */}
-      <div className="relative z-10 flex flex-col items-center px-12 py-16 rounded-3xl border border-white/5 bg-white/[0.02] backdrop-blur-xl shadow-2xl">
-        {/* Animated Eye Logo */}
-        <div className="relative w-40 h-40 mb-10">
-          {/* Decorative Rings */}
-          <div className="absolute inset-0 border-[3px] border-primary-500/20 rounded-full animate-[spin_12s_linear_infinite]" />
-          <div className="absolute inset-3 border border-dashed border-primary-400/30 rounded-full animate-[spin_20s_linear_infinite_reverse]" />
-          <div className="absolute inset-6 border-[2px] border-primary-600/10 rounded-full animate-[pulse_4s_ease-in-out_infinite]" />
-          
-          {/* Central Eye SVG */}
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(249,115,22,0.45)]">
-              <defs>
-                <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fdba74" />
-                  <stop offset="50%" stopColor="#f97316" />
-                  <stop offset="100%" stopColor="#c2410c" />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-              
-              {/* Eye Lid Shapes */}
-              <path 
-                d="M10 50Q50 15 90 50Q50 85 10 50" 
-                fill="none" 
-                stroke="url(#mainGradient)" 
-                strokeWidth="4" 
-                strokeLinecap="round"
-                className="animate-[eye-lid_6s_ease-in-out_infinite]"
-              />
-              
-              {/* Pupil & Iris */}
-              <g className="animate-[pupil-track_8s_ease-in-out_infinite]">
-                <circle cx="50" cy="50" r="16" fill="none" stroke="url(#mainGradient)" strokeWidth="1" strokeDasharray="4 2" className="animate-spin-slow" />
-                <circle cx="50" cy="50" r="10" fill="url(#mainGradient)" filter="url(#glow)" />
-                <circle cx="53" cy="47" r="3" fill="white" fillOpacity="0.4" />
-              </g>
-
-              {/* Scanning Ray */}
-              <path 
-                d="M20 50L80 50" 
-                stroke="rgba(255,255,255,0.2)" 
-                strokeWidth="0.5" 
-                className="animate-[scan-sweep_3s_ease-in-out_infinite]"
-              />
-            </svg>
-          </div>
+      <div className="relative z-10 flex flex-col items-center rounded-3xl border border-white/5 bg-white/[0.02] px-12 py-16 shadow-2xl backdrop-blur-xl">
+        <div className="relative mb-10 flex size-40 items-center justify-center">
+          <div className="absolute inset-0 rounded-full border border-primary-500/20" />
+          <div className="absolute inset-3 rounded-full border border-dashed border-primary-400/35 animate-[spin_18s_linear_infinite]" />
+          <div className="absolute inset-8 rounded-full border border-primary-600/15" />
+          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,_rgba(249,115,22,0.14),_transparent_62%)]" />
+          <PropertyEyeMark size="xl" className="relative drop-shadow-[0_0_18px_rgba(249,115,22,0.28)]" animate />
         </div>
 
         {/* Text Presentation */}
@@ -145,29 +101,8 @@ const LoadingScreen: React.FC = () => {
           0% { top: -10%; }
           100% { top: 110%; }
         }
-        @keyframes eye-lid {
-          0%, 85%, 100% { transform: scaleY(1); }
-          92% { transform: scaleY(0.1); }
-        }
-        @keyframes pupil-track {
-          0%, 100% { transform: translate(0, 0); }
-          25% { transform: translate(3px, -2px); }
-          50% { transform: translate(-3px, 2px); }
-          75% { transform: translate(2px, 3px); }
-        }
-        @keyframes scan-sweep {
-          0%, 100% { transform: scaleX(0); opacity: 0; }
-          50% { transform: scaleX(1.2); opacity: 0.8; }
-        }
         @keyframes text-shimmer {
           to { background-position: 200% center; }
-        }
-        .animate-spin-slow {
-          animation: spin 8s linear infinite;
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

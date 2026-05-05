@@ -13,6 +13,7 @@ import { ENDPOINTS } from '../config';
 import { AgencyStats } from '../types';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/axios';
+import PropertyEyeMark from '../components/layout/PropertyEyeMark';
 
 interface StatCardProps {
   title: string;
@@ -61,7 +62,15 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <div className="mb-6 flex items-center gap-4">
+        <div className="rounded-2xl bg-white p-2 shadow-sm ring-1 ring-primary-100">
+          <PropertyEyeMark size="md" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-sm text-slate-500">Property Eye overview and verification status</p>
+        </div>
+      </div>
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
