@@ -165,7 +165,7 @@ const AdminAlto = () => {
                           agency.alto_status.includes("Production Connected")
                             ? "bg-green-100 text-green-700"
                             : agency.alto_status.includes("Sandbox")
-                            ? "bg-blue-100 text-blue-700"
+                            ? "bg-primary-100 text-primary-700"
                             : "bg-slate-100 text-slate-600"
                         )}
                       >

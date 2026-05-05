@@ -139,11 +139,11 @@ const Dashboard = () => {
                 <p className="text-xs text-green-700">All services running</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+            <div className="flex items-center gap-3 rounded-lg border border-primary-100 bg-primary-50 p-3">
+              <div className="w-2 h-2 rounded-full bg-primary-500"></div>
               <div>
-                <p className="text-sm font-medium text-blue-900">PPD Data Up-to-Date</p>
-                <p className="text-xs text-blue-700">Last sync: Today</p>
+                <p className="text-sm font-medium text-primary-900">PPD Data Up-to-Date</p>
+                <p className="text-xs text-primary-700">Last sync: Today</p>
               </div>
             </div>
           </div>

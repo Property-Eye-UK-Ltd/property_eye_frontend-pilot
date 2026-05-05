@@ -27,19 +27,19 @@ const LoadingScreen: React.FC = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Animated Gradient Orbs */}
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary-600/10 blur-[150px] animate-[pulse_8s_ease-in-out_infinite]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/10 blur-[150px] animate-[pulse_10s_ease-in-out_infinite_reverse]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-primary-500/10 blur-[150px] animate-[pulse_10s_ease-in-out_infinite_reverse]" />
         
         {/* Animated Grid */}
         <div 
           className="absolute inset-0 opacity-[0.05] animate-[grid-move_20s_linear_infinite]" 
           style={{ 
-            backgroundImage: `linear-gradient(rgba(14, 165, 233, 0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(14, 165, 233, 0.2) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(rgba(249, 115, 22, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(249, 115, 22, 0.18) 1px, transparent 1px)`,
             backgroundSize: '50px 50px'
           }} 
         />
 
         {/* Scan Line Effect */}
-        <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent shadow-[0_0_20px_rgba(14,165,233,0.5)] animate-[scan-line_4s_linear_infinite]" />
+        <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary-500/50 to-transparent shadow-[0_0_20px_rgba(249,115,22,0.38)] animate-[scan-line_4s_linear_infinite]" />
       </div>
 
       {/* Glassmorphic Container */}
@@ -53,12 +53,12 @@ const LoadingScreen: React.FC = () => {
           
           {/* Central Eye SVG */}
           <div className="absolute inset-0 flex items-center justify-center p-8">
-            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(14,165,233,0.6)]">
+            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(249,115,22,0.45)]">
               <defs>
                 <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#0ea5e9" />
-                  <stop offset="50%" stopColor="#3b82f6" />
-                  <stop offset="100%" stopColor="#2563eb" />
+                  <stop offset="0%" stopColor="#fdba74" />
+                  <stop offset="50%" stopColor="#f97316" />
+                  <stop offset="100%" stopColor="#c2410c" />
                 </linearGradient>
                 <filter id="glow">
                   <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
@@ -124,7 +124,7 @@ const LoadingScreen: React.FC = () => {
 
             {/* Progress Bar Container */}
             <div className="w-64 h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
-              <div className="h-full bg-gradient-to-r from-primary-600 to-blue-400 animate-[progress_3s_ease-in-out_infinite]" />
+              <div className="h-full bg-gradient-to-r from-primary-700 to-primary-400 animate-[progress_3s_ease-in-out_infinite]" />
             </div>
           </div>
         </div>

@@ -23,6 +23,7 @@ export const ENDPOINTS = {
   FRAUD: {
     SCAN: "/fraud/scan",
     REPORTS: "/fraud/reports",
+    GROUPED_REPORTS: "/fraud/reports/grouped",
     UPDATE_REPORT: (id: string) => `/fraud/reports/${id}`,
     DELETE_REPORT: (id: string) => `/fraud/reports/${id}`,
   },

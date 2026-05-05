@@ -33,6 +33,22 @@ export interface FraudReport {
   verified_at?: string;
 }
 
+export interface FraudReportGroup {
+  group_key: string;
+  property_address: string;
+  postcode?: string | null;
+  property_number?: string | null;
+  total_matches: number;
+  highest_confidence_score: number;
+  risk_level?: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  latest_transfer_date?: string | null;
+  suspicious_count: number;
+  confirmed_fraud_count: number;
+  cleared_count: number;
+  error_count: number;
+  items: FraudReport[];
+}
+
 export interface UploadStats {
   upload_id: string;
   status: string;

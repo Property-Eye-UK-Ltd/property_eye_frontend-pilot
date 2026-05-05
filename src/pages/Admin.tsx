@@ -176,12 +176,12 @@ const Admin = () => {
                           "px-2.5 py-1 rounded-full text-xs font-medium capitalize inline-flex items-center gap-1.5",
                           job.status === 'completed' ? "bg-green-100 text-green-700 border border-green-200" :
                           job.status === 'failed' ? "bg-red-100 text-red-700 border border-red-200" :
-                          "bg-blue-100 text-blue-700 border border-blue-200"
+                          "bg-primary-100 text-primary-700 border border-primary-200"
                         )}>
                           <span className={clsx("w-1.5 h-1.5 rounded-full", 
                             job.status === 'completed' ? "bg-green-500" :
                             job.status === 'failed' ? "bg-red-500" :
-                            "bg-blue-500"
+                            "bg-primary-500"
                           )}></span>
                           {job.status}
                         </span>

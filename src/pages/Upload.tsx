@@ -266,7 +266,7 @@ const Upload = () => {
           </button>
           <button
             onClick={() => setIsManualModalOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
           >
             <FontAwesomeIcon icon={faKeyboard} />
             Manual Entry
@@ -375,14 +375,14 @@ const Upload = () => {
                               {/* HMLR Verify button */}
                               <button
                                 onClick={() => handleVerifyClick(listing)}
-                                className="text-indigo-500 hover:text-indigo-700 p-1 transition-colors"
+                                className="p-1 text-primary-600 transition-colors hover:text-primary-800"
                                 title="Verify via HMLR (HM Flow)"
                               >
                                 <FontAwesomeIcon icon={faEye} />
                               </button>
                               <button
                                 onClick={() => handleEdit(listing)}
-                                className="text-blue-500 hover:text-blue-700 p-1"
+                                className="p-1 text-primary-600 hover:text-primary-800"
                               >
                                 <FontAwesomeIcon icon={faPencilAlt} />
                               </button>
@@ -518,7 +518,7 @@ const Upload = () => {
               </button>
               <button
                 onClick={handleManualSubmit}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
+                className="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white hover:bg-primary-700"
               >
                 Save Listing
               </button>
@@ -543,7 +543,7 @@ const Upload = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full animate-in fade-in zoom-in duration-200">
             <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="mx-auto mb-4 flex w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
                 <FontAwesomeIcon icon={faShield} className="text-3xl" />
               </div>
               <h2 className="text-xl font-bold mb-2">HMLR Verification</h2>
@@ -568,7 +568,7 @@ const Upload = () => {
                 <button
                   onClick={handleVerifyConfirm}
                   disabled={isVerifying}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-60"
                 >
                   {isVerifying ? (
                     <>
