@@ -5,6 +5,7 @@ import {
   faDatabase,
   faBuilding,
   faHome,
+  faFlag,
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
@@ -18,6 +19,7 @@ const AdminSidebar = () => {
   const navItems = [
     { path: "/admin", label: "Admin Home", icon: faHome, end: true },
     { path: "/admin/records", label: "Official Records", icon: faDatabase },
+    { path: "/admin/fraud-cases", label: "Fraud Cases", icon: faFlag },
     { path: "/admin/alto", label: "Alto Integration", icon: faBuilding },
     { path: "/", label: "Client Dashboard", icon: faChartLine },
   ];

@@ -4,6 +4,7 @@ import {
   faArrowRight,
   faDatabase,
   faBuilding,
+  faFlag,
   faShieldAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -14,6 +15,12 @@ const AdminHome = () => {
       description: "Manage PPD uploads and review processing history.",
       to: "/admin/records",
       icon: faDatabase,
+    },
+    {
+      title: "Fraud Cases",
+      description: "Review flagged cases across all agencies and fetch register extracts.",
+      to: "/admin/fraud-cases",
+      icon: faFlag,
     },
     {
       title: "Alto Integration",
@@ -37,7 +44,7 @@ const AdminHome = () => {
         </p>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => (
           <Link
             key={card.to}

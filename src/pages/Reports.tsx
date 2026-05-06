@@ -6,9 +6,9 @@ import {
   faCheck,
   faCheckCircle,
   faChevronDown,
-  faChevronRight,
   faEye,
   faFilter,
+  faLandmark,
   faPencilAlt,
   faSpinner,
   faTimes,
@@ -20,6 +20,7 @@ import { ENDPOINTS } from "../config";
 import {
   FraudReport,
   FraudReportGroup,
+  VerificationSummary,
   VerificationResult,
 } from "../types";
 import api from "../lib/axios";
@@ -168,6 +169,34 @@ const formatDate = (value?: string | null) =>
 const formatCurrency = (value?: number) =>
   value ? `£${value.toLocaleString()}` : "—";
 
+const showClientNameRequiredAlert = () => {
+  toast.custom(
+    (t) => (
+      <div
+        className={clsx(
+          "max-w-sm rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-xl",
+          t.visible ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <div className="flex items-start gap-3">
+          <div className="rounded-full bg-amber-100 p-2 text-amber-700">
+            <FontAwesomeIcon icon={faExclamationTriangle} />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-amber-950">
+              Verification blocked
+            </div>
+            <div className="mt-1 text-sm text-amber-800">
+              Buyer / client name is required to perform this operation.
+            </div>
+          </div>
+        </div>
+      </div>
+    ),
+    { duration: 4500 }
+  );
+};
+
 const GroupSummary = ({ group }: { group: FraudReportGroup }) => (
   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
     <span>{group.total_matches} resale match{group.total_matches === 1 ? "" : "es"}</span>
@@ -205,6 +234,7 @@ const Reports = () => {
   const [verifiedResults, setVerifiedResults] = useState<
     Record<string, VerificationResult>
   >({});
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {}
   );
@@ -261,6 +291,64 @@ const Reports = () => {
     },
   });
 
+  const verifyMutation = useMutation({
+    mutationFn: async (report: FraudReport) => {
+      const clientName = report.client_name?.trim();
+
+      if (!clientName) {
+        throw new Error("CLIENT_NAME_REQUIRED");
+      }
+
+      const response = await api.post<VerificationSummary>(
+        ENDPOINTS.VERIFICATION.VERIFY_LISTING(report.property_listing_id)
+      );
+
+      const result = response.data.results?.[0];
+      if (!result) {
+        throw new Error("Land Registry verification returned no result.");
+      }
+
+      await api.patch(ENDPOINTS.FRAUD.UPDATE_REPORT(report.id), {
+        verification_status: result.verification_status,
+        verified_owner_name: result.verified_owner_name,
+        is_confirmed_fraud: result.is_confirmed_fraud,
+      });
+
+      return result;
+    },
+    onMutate: (report) => {
+      setVerifyingId(report.id);
+    },
+    onSuccess: (result, report) => {
+      setVerifiedResults((current) => ({
+        ...current,
+        [report.id]: { ...result, match_id: report.id },
+      }));
+      setDetailResult({ ...result, match_id: report.id });
+      queryClient.invalidateQueries({ queryKey: ["fraud-report-groups"] });
+
+      toast.success(
+        result.is_confirmed_fraud
+          ? "Land Registry confirmed this as fraud."
+          : "Land Registry cleared this listing."
+      );
+    },
+    onError: (mutationError: any) => {
+      if (mutationError.message === "CLIENT_NAME_REQUIRED") {
+        showClientNameRequiredAlert();
+        return;
+      }
+
+      toast.error(
+        "Verification failed: " +
+          (mutationError.response?.data?.detail || mutationError.message)
+      );
+    },
+    onSettled: () => {
+      setVerifyingId(null);
+    },
+  });
+
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups((current) => ({
       ...current,
@@ -290,6 +378,15 @@ const Reports = () => {
     if (confirm("Are you sure you want to delete this fraud report?")) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const handleVerify = (report: FraudReport) => {
+    if (!report.client_name?.trim()) {
+      showClientNameRequiredAlert();
+      return;
+    }
+
+    verifyMutation.mutate(report);
   };
 
   if (isLoading) {
@@ -432,217 +529,306 @@ const Reports = () => {
                   >
                     <div className="overflow-hidden">
                       <div className="border-t border-slate-100 bg-slate-50/50 px-4 py-4 sm:px-6">
-                      <div className="space-y-3">
-                        {group.items.map((report) => {
-                          const isEditing = editingId === report.id;
-                          const latestResult = verifiedResults[report.id];
+                        <div className="space-y-3">
+                          {group.items.map((report) => {
+                            const isEditing = editingId === report.id;
+                            const latestResult = verifiedResults[report.id];
+                            const resolvedResult =
+                              latestResult ||
+                              (report.verified_at
+                                ? {
+                                    match_id: report.id,
+                                    property_address: report.property_address,
+                                    client_name: report.client_name,
+                                    vendor_name: report.vendor_name ?? null,
+                                    verification_status:
+                                      report.verification_status as
+                                        | "confirmed_fraud"
+                                        | "not_fraud"
+                                        | "error",
+                                    verified_owner_name:
+                                      report.verified_owner_name ?? null,
+                                    is_confirmed_fraud: report.is_confirmed_fraud,
+                                    verified_at: report.verified_at,
+                                    error_message: null,
+                                  }
+                                : null);
+                            const isLandRegistryVerified = Boolean(resolvedResult);
+                            const isFraudConfirmed =
+                              resolvedResult?.is_confirmed_fraud ??
+                              report.is_confirmed_fraud;
+                            const verificationAccent = isFraudConfirmed
+                              ? "border-red-200 bg-red-50/70"
+                              : isLandRegistryVerified
+                              ? "border-emerald-200 bg-emerald-50/70"
+                              : "border-slate-200 bg-white";
 
-                          return (
-                            <div
-                              key={report.id}
-                              className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto]"
-                            >
-                              <div className="min-w-0">
-                                <div className="mb-2 flex flex-wrap items-center gap-2">
-                                  <StatusBadge
-                                    status={
-                                      latestResult?.verification_status ??
-                                      report.verification_status
-                                    }
-                                  />
-                                  <RiskBadge level={report.risk_level} />
-                                  <span className="text-xs text-slate-400">
-                                    {report.confidence_score.toFixed(1)}% match
-                                  </span>
-                                </div>
-
-                                {isEditing ? (
-                                  <div className="space-y-2">
-                                    <input
-                                      type="text"
-                                      value={editData.property_address || ""}
-                                      onChange={(e) =>
-                                        setEditData({
-                                          ...editData,
-                                          property_address: e.target.value,
-                                        })
-                                      }
-                                      className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                                      placeholder="Property Address"
-                                    />
-                                    <input
-                                      type="text"
-                                      value={editData.ppd_postcode || ""}
-                                      onChange={(e) =>
-                                        setEditData({
-                                          ...editData,
-                                          ppd_postcode: e.target.value,
-                                        })
-                                      }
-                                      className="w-full rounded border border-slate-300 px-2 py-1 text-xs"
-                                      placeholder="Postcode"
-                                    />
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <div className="font-medium text-slate-900">
-                                      {report.ppd_full_address || report.property_address}
-                                    </div>
-                                    <div className="mt-1 text-xs text-slate-500">
-                                      Transfer date {formatDate(report.ppd_transfer_date)}
-                                      {" · "}
-                                      Official price {formatCurrency(report.ppd_price)}
-                                    </div>
-                                  </div>
+                            return (
+                              <div
+                                key={report.id}
+                                className={clsx(
+                                  "grid gap-4 rounded-lg border p-5 shadow-sm lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto]",
+                                  verificationAccent
                                 )}
-                              </div>
+                              >
+                                <div className="min-w-0">
+                                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                                    <StatusBadge
+                                      status={
+                                        resolvedResult?.verification_status ??
+                                        report.verification_status
+                                      }
+                                    />
+                                    <RiskBadge level={report.risk_level} />
+                                    <span className="text-xs text-slate-400">
+                                      {report.confidence_score.toFixed(1)}% match
+                                    </span>
+                                  </div>
 
-                              <div className="min-w-0">
-                                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                  Parties
+                                  {isEditing ? (
+                                    <div className="space-y-2">
+                                      <input
+                                        type="text"
+                                        value={editData.property_address || ""}
+                                        onChange={(e) =>
+                                          setEditData({
+                                            ...editData,
+                                            property_address: e.target.value,
+                                          })
+                                        }
+                                        className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                                        placeholder="Property Address"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={editData.ppd_postcode || ""}
+                                        onChange={(e) =>
+                                          setEditData({
+                                            ...editData,
+                                            ppd_postcode: e.target.value,
+                                          })
+                                        }
+                                        className="w-full rounded border border-slate-300 px-2 py-1 text-xs"
+                                        placeholder="Postcode"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <div className="font-medium text-slate-900">
+                                        {report.ppd_full_address || report.property_address}
+                                      </div>
+                                      <div className="mt-1 text-xs text-slate-500">
+                                        Transfer date {formatDate(report.ppd_transfer_date)}
+                                        {" · "}
+                                        Official price {formatCurrency(report.ppd_price)}
+                                      </div>
+                                      {isLandRegistryVerified && (
+                                        <div
+                                          className={clsx(
+                                            "mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]",
+                                            isFraudConfirmed
+                                              ? "border-red-200 bg-red-100 text-red-700"
+                                              : "border-emerald-200 bg-emerald-100 text-emerald-700"
+                                          )}
+                                        >
+                                          <span className="h-2 w-2 rounded-full bg-current" />
+                                          Verification complete
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
-                                {isEditing ? (
-                                  <input
-                                    type="text"
-                                    value={editData.client_name || ""}
-                                    onChange={(e) =>
-                                      setEditData({
-                                        ...editData,
-                                        client_name: e.target.value,
-                                      })
-                                    }
-                                    className="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                                    placeholder="Buyer (client) name"
-                                  />
-                                ) : (
+
+                                <div className="min-w-0">
+                                  <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                                    Parties
+                                  </div>
+                                  {isEditing ? (
+                                    <input
+                                      type="text"
+                                      value={editData.client_name || ""}
+                                      onChange={(e) =>
+                                        setEditData({
+                                          ...editData,
+                                          client_name: e.target.value,
+                                        })
+                                      }
+                                      className="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                                      placeholder="Buyer (client) name"
+                                    />
+                                  ) : (
+                                    <div className="mt-2 space-y-1 text-sm text-slate-600">
+                                      <div>
+                                        <span className="text-slate-400">Buyer:</span>{" "}
+                                        {report.client_name ?? "—"}
+                                      </div>
+                                      <div>
+                                        <span className="text-slate-400">Vendor:</span>{" "}
+                                        {report.vendor_name ?? "—"}
+                                      </div>
+                                      {(resolvedResult?.verified_owner_name ||
+                                        report.verified_owner_name) && (
+                                        <div className="text-xs text-slate-500">
+                                          Registered owner:{" "}
+                                          {resolvedResult?.verified_owner_name ??
+                                            report.verified_owner_name}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                                    Timing
+                                  </div>
                                   <div className="mt-2 space-y-1 text-sm text-slate-600">
                                     <div>
-                                      <span className="text-slate-400">Buyer:</span>{" "}
-                                      {report.client_name ?? "—"}
+                                      <span className="text-slate-400">Withdrawn:</span>{" "}
+                                      {formatDate(report.withdrawn_date)}
                                     </div>
                                     <div>
-                                      <span className="text-slate-400">Vendor:</span>{" "}
-                                      {report.vendor_name ?? "—"}
+                                      <span className="text-slate-400">Detected:</span>{" "}
+                                      {formatDate(report.detected_at)}
                                     </div>
-                                    {(latestResult?.verified_owner_name ||
-                                      report.verified_owner_name) && (
+                                    {(resolvedResult?.verified_at || report.verified_at) && (
                                       <div className="text-xs text-slate-500">
-                                        Registered owner:{" "}
-                                        {latestResult?.verified_owner_name ??
-                                          report.verified_owner_name}
+                                        Verified{" "}
+                                        {formatDate(
+                                          resolvedResult?.verified_at ?? report.verified_at
+                                        )}
                                       </div>
                                     )}
                                   </div>
-                                )}
-                              </div>
-
-                              <div>
-                                <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                  Timing
                                 </div>
-                                <div className="mt-2 space-y-1 text-sm text-slate-600">
-                                  <div>
-                                    <span className="text-slate-400">Withdrawn:</span>{" "}
-                                    {formatDate(report.withdrawn_date)}
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-400">Detected:</span>{" "}
-                                    {formatDate(report.detected_at)}
-                                  </div>
-                                  {(latestResult?.verified_at || report.verified_at) && (
-                                    <div className="text-xs text-slate-500">
-                                      Verified{" "}
-                                      {formatDate(
-                                        latestResult?.verified_at ?? report.verified_at
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
 
-                              <div className="flex items-start justify-end">
-                                <div className="flex gap-2">
-                                  {isEditing ? (
-                                    <>
-                                      <button
-                                        onClick={() => handleSave(report.id)}
-                                        className="p-1 text-green-600 hover:text-green-700"
-                                        title="Save"
-                                        disabled={updateMutation.isPending}
-                                      >
-                                        <FontAwesomeIcon icon={faCheck} />
-                                      </button>
-                                      <button
-                                        onClick={handleCancel}
-                                        className="p-1 text-slate-400 hover:text-slate-600"
-                                        title="Cancel"
-                                      >
-                                        <FontAwesomeIcon icon={faTimes} />
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      {(latestResult ||
-                                        (report.verification_status !==
-                                          "suspicious" &&
-                                          report.verified_at)) && (
+                                <div className="flex items-start justify-end">
+                                  <div className="flex min-w-[12rem] flex-col items-stretch gap-2">
+                                    {isEditing ? (
+                                      <div className="flex justify-end gap-2">
                                         <button
-                                          onClick={() =>
-                                            setDetailResult(
-                                              latestResult ?? {
-                                                match_id: report.id,
-                                                property_address:
-                                                  report.property_address,
-                                                client_name: report.client_name,
-                                                vendor_name:
-                                                  report.vendor_name ?? null,
-                                                verification_status:
-                                                  report.verification_status as
-                                                    | "confirmed_fraud"
-                                                    | "not_fraud"
-                                                    | "error",
-                                                verified_owner_name:
-                                                  report.verified_owner_name ??
-                                                  null,
-                                                is_confirmed_fraud:
-                                                  report.is_confirmed_fraud,
-                                                verified_at: report.verified_at!,
-                                                error_message: null,
-                                              }
-                                            )
-                                          }
-                                          className="p-1 text-slate-400 hover:text-primary-600"
-                                          title="View Verification Details"
+                                          onClick={() => handleSave(report.id)}
+                                          className="p-1 text-green-600 hover:text-green-700"
+                                          title="Save"
+                                          disabled={updateMutation.isPending}
                                         >
-                                          <FontAwesomeIcon icon={faEye} />
+                                          <FontAwesomeIcon icon={faCheck} />
                                         </button>
-                                      )}
+                                        <button
+                                          onClick={handleCancel}
+                                          className="p-1 text-slate-400 hover:text-slate-600"
+                                          title="Cancel"
+                                        >
+                                          <FontAwesomeIcon icon={faTimes} />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => handleVerify(report)}
+                                          disabled={verifyingId === report.id}
+                                          className={clsx(
+                                            "group inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-left transition-colors",
+                                            report.client_name?.trim()
+                                              ? "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white"
+                                              : "border-slate-200 bg-slate-100 text-slate-400"
+                                          )}
+                                          title={
+                                            report.client_name?.trim()
+                                              ? "Verify fraud"
+                                              : "Buyer / client name required"
+                                          }
+                                        >
+                                          <span
+                                            className={clsx(
+                                              "flex h-8 w-8 items-center justify-center rounded-lg",
+                                              isFraudConfirmed
+                                                ? "bg-red-100 text-red-600"
+                                                : isLandRegistryVerified
+                                                ? "bg-emerald-100 text-emerald-600"
+                                                : "bg-amber-100 text-amber-600"
+                                            )}
+                                          >
+                                            {verifyingId === report.id ? (
+                                              <FontAwesomeIcon
+                                                icon={faSpinner}
+                                                spin
+                                              />
+                                            ) : (
+                                              <FontAwesomeIcon icon={faLandmark} />
+                                            )}
+                                          </span>
+                                          <span className="text-sm font-semibold">
+                                            {verifyingId === report.id
+                                              ? "Checking..."
+                                              : "Verify fraud"}
+                                          </span>
+                                        </button>
 
-                                      <button
-                                        onClick={() => handleEdit(report)}
-                                        className="p-1 text-primary-600 hover:text-primary-800"
-                                        title="Edit"
-                                      >
-                                        <FontAwesomeIcon icon={faPencilAlt} />
-                                      </button>
+                                        {(resolvedResult ||
+                                          (report.verification_status !==
+                                            "suspicious" &&
+                                            report.verified_at)) && (
+                                          <button
+                                            onClick={() =>
+                                              setDetailResult(
+                                                resolvedResult ?? {
+                                                  match_id: report.id,
+                                                  property_address:
+                                                    report.property_address,
+                                                  client_name: report.client_name,
+                                                  vendor_name:
+                                                    report.vendor_name ?? null,
+                                                  verification_status:
+                                                    report.verification_status as
+                                                      | "confirmed_fraud"
+                                                      | "not_fraud"
+                                                      | "error",
+                                                  verified_owner_name:
+                                                    report.verified_owner_name ??
+                                                    null,
+                                                  is_confirmed_fraud:
+                                                    report.is_confirmed_fraud,
+                                                  verified_at: report.verified_at!,
+                                                  error_message: null,
+                                                }
+                                              )
+                                            }
+                                            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-primary-700"
+                                            title="View verification details"
+                                          >
+                                            <FontAwesomeIcon icon={faEye} />
+                                            Details
+                                          </button>
+                                        )}
 
-                                      <button
-                                        onClick={() => handleDelete(report.id)}
-                                        className="p-1 text-red-500 hover:text-red-700"
-                                        title="Delete"
-                                        disabled={deleteMutation.isPending}
-                                      >
-                                        <FontAwesomeIcon icon={faTimes} />
-                                      </button>
-                                    </>
-                                  )}
+                                        <div className="flex justify-end gap-2">
+                                          <button
+                                            onClick={() => handleEdit(report)}
+                                            className="p-1 text-primary-600 hover:text-primary-800"
+                                            title="Edit"
+                                          >
+                                            <FontAwesomeIcon icon={faPencilAlt} />
+                                          </button>
+
+                                          <button
+                                            onClick={() => handleDelete(report.id)}
+                                            className="p-1 text-red-500 hover:text-red-700"
+                                            title="Delete"
+                                            disabled={deleteMutation.isPending}
+                                          >
+                                            <FontAwesomeIcon icon={faTimes} />
+                                          </button>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
                     </div>
                   </div>
                 </section>

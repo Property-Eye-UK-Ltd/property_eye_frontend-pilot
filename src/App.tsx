@@ -6,6 +6,8 @@ import Upload from "./pages/Upload";
 import Reports from "./pages/Reports";
 import Admin from "./pages/Admin";
 import AdminAlto from "./pages/AdminAlto";
+import AdminFraudCaseDetailPage from "./pages/AdminFraudCaseDetail";
+import AdminFraudCases from "./pages/AdminFraudCases";
 import AdminHome from "./pages/AdminHome";
 import AdminLogin from "./pages/AdminLogin";
 import Login from "./pages/Login";
@@ -56,6 +58,8 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminHome />} />
               <Route path="records" element={<Admin />} />
+              <Route path="fraud-cases" element={<AdminFraudCases />} />
+              <Route path="fraud-cases/:reportId" element={<AdminFraudCaseDetailPage />} />
               <Route path="alto" element={<AdminAlto />} />
             </Route>
           </Route>

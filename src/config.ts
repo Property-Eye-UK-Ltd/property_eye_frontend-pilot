@@ -38,6 +38,12 @@ export const ENDPOINTS = {
   },
   ADMIN: {
     ALTO_AGENCIES: "/admin/alto-agencies",
+    FRAUD_REPORTS: "/admin/fraud-reports",
+    FRAUD_REPORT: (id: string) => `/admin/fraud-reports/${id}`,
+    FRAUD_REPORT_AGENCIES: "/admin/fraud-reports/agencies",
+    REGISTER_EXTRACT: (id: string) => `/admin/fraud-reports/${id}/register-extract`,
+    REGISTER_EXTRACT_PDF: (id: string) =>
+      `/admin/fraud-reports/${id}/register-extract/pdf`,
   },
   INTEGRATIONS: {
     ALTO_IMPORT: "/integrations/alto/import",
