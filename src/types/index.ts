@@ -65,6 +65,8 @@ export interface PPDJob {
   status: 'uploaded' | 'processing' | 'completed' | 'failed';
   records_processed: number;
   error_message?: string;
+  source_file_exists: boolean;
+  parquet_file_exists: boolean;
   uploaded_at: string;
   processed_at?: string;
 }

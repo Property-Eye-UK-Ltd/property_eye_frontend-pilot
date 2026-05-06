@@ -11,17 +11,24 @@ import {
   faTimes, 
   faFileCsv, 
   faTrash,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faCircleCheck,
+  faCircleXmark,
+  faRotateRight,
 } from '@fortawesome/free-solid-svg-icons';
 import clsx from 'clsx';
 import { ENDPOINTS } from '../config';
 import { PPDJob } from '../types';
 import api from '../lib/axios';
 
+type ModalMode = 'upload' | 'reupload';
+
 const Admin = () => {
   const [year, setYear] = useState(new Date().getFullYear());
   const [file, setFile] = useState<File | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<ModalMode>('upload');
+  const [activeJob, setActiveJob] = useState<PPDJob | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -49,6 +56,29 @@ const Admin = () => {
     },
     onError: (error: any) => {
       toast.error('Upload failed: ' + (error.response?.data?.detail || error.message));
+    }
+  });
+
+  const reuploadMutation = useMutation({
+    mutationFn: async ({
+      uploadId,
+      formData,
+    }: {
+      uploadId: string;
+      formData: FormData;
+    }) => {
+      const response = await api.post(ENDPOINTS.PPD.REUPLOAD(uploadId), formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Official record restored and processing restarted.');
+      handleCloseModal();
+      queryClient.invalidateQueries({ queryKey: ['ppd-uploads'] });
+    },
+    onError: (error: any) => {
+      toast.error('Restore failed: ' + (error.response?.data?.detail || error.message));
     }
   });
 
@@ -86,26 +116,59 @@ const Admin = () => {
     e.preventDefault();
     if (!file) return;
 
-    // Check if an upload for the selected year already exists
-    const existingUpload = uploads?.find((job) => job.year === year);
-    if (existingUpload) {
-      toast.error(`An official record for the year ${year} already exists. Please delete it first before uploading a new one.`, {
-        duration: 5000,
-      });
+    if (modalMode === 'upload') {
+      const existingUpload = uploads?.find((job) => job.year === year);
+      if (existingUpload) {
+        toast.error(`An official record for the year ${year} already exists. Please delete it first before uploading a new one.`, {
+          duration: 5000,
+        });
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('year', year.toString());
+      formData.append('file', file);
+
+      uploadMutation.mutate(formData);
+      return;
+    }
+
+    if (!activeJob) {
+      toast.error('No record selected for restore.');
       return;
     }
 
     const formData = new FormData();
-    formData.append('year', year.toString());
     formData.append('file', file);
+    reuploadMutation.mutate({
+      uploadId: activeJob.upload_id,
+      formData,
+    });
+  };
 
-    uploadMutation.mutate(formData);
+  const openUploadModal = () => {
+    setModalMode('upload');
+    setActiveJob(null);
+    setYear(new Date().getFullYear());
+    setFile(null);
+    setIsModalOpen(true);
+  };
+
+  const openReuploadModal = (job: PPDJob) => {
+    setModalMode('reupload');
+    setActiveJob(job);
+    setYear(job.year);
+    setFile(null);
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setFile(null);
+    setActiveJob(null);
+    setModalMode('upload');
     uploadMutation.reset();
+    reuploadMutation.reset();
   };
 
   const handleDeleteClick = (id: string) => {
@@ -118,6 +181,10 @@ const Admin = () => {
     }
   };
 
+  const currentActionTitle = modalMode === 'reupload' ? 'Restore Official Record' : 'Upload Official Records';
+  const currentActionButtonLabel = modalMode === 'reupload' ? 'Restore Data' : 'Upload Data';
+  const currentMutation = modalMode === 'reupload' ? reuploadMutation : uploadMutation;
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -126,7 +193,7 @@ const Admin = () => {
           <p className="text-slate-500 mt-1">Manage Price Paid Data (PPD) uploads for fraud detection.</p>
         </div>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={openUploadModal}
           className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
         >
           <FontAwesomeIcon icon={faUpload} />
@@ -169,7 +236,26 @@ const Admin = () => {
                       <td className="px-6 py-4 text-slate-600">
                         {new Date(job.uploaded_at).toLocaleDateString()} <span className="text-xs text-slate-400 ml-1">{new Date(job.uploaded_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                       </td>
-                      <td className="px-6 py-4 font-medium text-slate-900">{job.filename}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-slate-900 break-all">{job.filename}</span>
+                          <span
+                            className={clsx(
+                              "inline-flex items-center justify-center w-5 h-5 rounded-full",
+                              job.source_file_exists ? "text-emerald-600" : "text-red-600"
+                            )}
+                            title={job.source_file_exists ? "CSV present on disk" : "CSV missing from filesystem"}
+                          >
+                            <FontAwesomeIcon
+                              icon={job.source_file_exists ? faCircleCheck : faCircleXmark}
+                              className="text-sm"
+                            />
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          {job.parquet_file_exists ? 'Parquet available' : 'Parquet missing'}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-slate-600 font-medium">{job.year}</td>
                       <td className="px-6 py-4">
                         <span className={clsx(
@@ -195,13 +281,25 @@ const Admin = () => {
                         {job.records_processed?.toLocaleString() || '-'}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button 
-                          onClick={() => handleDeleteClick(job.upload_id)}
-                          className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-                          title="Delete Record"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                        <div className="flex justify-end items-center gap-2">
+                          {!job.source_file_exists && (
+                            <button
+                              onClick={() => openReuploadModal(job)}
+                              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors"
+                              title="Reupload record"
+                            >
+                              <FontAwesomeIcon icon={faRotateRight} />
+                              Reupload
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDeleteClick(job.upload_id)}
+                            className="text-slate-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+                            title="Delete Record"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -217,7 +315,7 @@ const Admin = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl max-w-lg w-full animate-in fade-in zoom-in duration-200">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-xl font-bold">Upload Official Records</h2>
+              <h2 className="text-xl font-bold">{currentActionTitle}</h2>
               <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
                 <FontAwesomeIcon icon={faTimes} className="text-lg" />
               </button>
@@ -233,10 +331,21 @@ const Admin = () => {
                     max="2030" 
                     value={year} 
                     onChange={(e) => setYear(Number(e.target.value))}
+                    disabled={modalMode === 'reupload'}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-all"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Specify the year this data belongs to.</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {modalMode === 'reupload'
+                      ? `Restoring the existing record for ${activeJob?.year}.`
+                      : 'Specify the year this data belongs to.'}
+                  </p>
                 </div>
+
+                {modalMode === 'reupload' && activeJob && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    Restoring <span className="font-medium text-slate-900">{activeJob.filename}</span> from the existing record path.
+                  </div>
+                )}
 
                 {!file ? (
                   <div 
@@ -276,16 +385,16 @@ const Admin = () => {
 
                 <button 
                   type="submit" 
-                  disabled={!file || uploadMutation.isPending}
+                  disabled={!file || currentMutation.isPending}
                   className="w-full bg-primary-600 hover:bg-primary-700 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 >
-                  {uploadMutation.isPending ? (
+                  {currentMutation.isPending ? (
                     <>
                       <FontAwesomeIcon icon={faSpinner} spin />
-                      Uploading...
+                      {modalMode === 'reupload' ? 'Restoring...' : 'Uploading...'}
                     </>
                   ) : (
-                    'Upload Data'
+                    currentActionButtonLabel
                   )}
                 </button>
               </form>

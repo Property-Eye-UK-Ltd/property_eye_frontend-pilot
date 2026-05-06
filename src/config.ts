@@ -35,6 +35,7 @@ export const ENDPOINTS = {
   PPD: {
     UPLOAD: "/ppd/upload",
     UPLOADS: "/ppd/uploads",
+    REUPLOAD: (id: string) => `/ppd/upload/${id}/reupload`,
   },
   ADMIN: {
     ALTO_AGENCIES: "/admin/alto-agencies",
