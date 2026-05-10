@@ -123,6 +123,7 @@ export interface AdminFraudCaseDetail extends AdminFraudCase {
   ppd_full_address?: string | null;
   address_similarity: number;
   land_registry_response?: string | null;
+  register_extract?: RegisterExtractResponse | null;
 }
 
 export interface AdminFraudCaseListResponse {

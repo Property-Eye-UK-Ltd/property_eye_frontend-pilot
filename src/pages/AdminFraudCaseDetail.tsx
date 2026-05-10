@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowLeft,
@@ -84,6 +84,7 @@ const AdminFraudCaseDetailPage = () => {
   const [searchParams] = useSearchParams();
   const [extractVisible, setExtractVisible] = useState(false);
   const mockMode = searchParams.get("mock") === "true";
+  const queryClient = useQueryClient();
 
   const caseQuery = useQuery<AdminFraudCaseDetail>({
     queryKey: ["admin-fraud-case", reportId],
@@ -96,7 +97,7 @@ const AdminFraudCaseDetailPage = () => {
 
   const extractQuery = useQuery<RegisterExtractResponse>({
     queryKey: ["admin-register-extract", reportId, mockMode],
-    enabled: Boolean(reportId && extractVisible),
+    enabled: Boolean(reportId && extractVisible && !caseQuery.data?.register_extract),
     queryFn: async () => {
       const response = await api.get(ENDPOINTS.ADMIN.REGISTER_EXTRACT(reportId!), {
         params: mockMode ? { mock: true } : undefined,
@@ -135,6 +136,28 @@ const AdminFraudCaseDetailPage = () => {
     },
   });
 
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.get<RegisterExtractResponse>(
+        ENDPOINTS.ADMIN.REGISTER_EXTRACT(reportId!),
+        {
+          params: mockMode ? { mock: true, force_refresh: true } : { force_refresh: true },
+        }
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["admin-register-extract", reportId, mockMode], data);
+      queryClient.invalidateQueries({ queryKey: ["admin-fraud-case", reportId] });
+      setExtractVisible(true);
+    },
+    onError: (error: any) => {
+      toast.error(
+        "Refresh failed: " + (error.response?.data?.detail || error.message)
+      );
+    },
+  });
+
   const mismatchSummary = useMemo(() => {
     const currentCase = caseQuery.data;
     const extract = extractQuery.data;
@@ -146,7 +169,13 @@ const AdminFraudCaseDetailPage = () => {
   }, [caseQuery.data, extractQuery.data]);
 
   const currentCase = caseQuery.data;
-  const extract = extractQuery.data;
+  const extract = extractQuery.data ?? currentCase?.register_extract ?? null;
+
+  useEffect(() => {
+    if (caseQuery.data?.register_extract) {
+      setExtractVisible(true);
+    }
+  }, [caseQuery.data?.register_extract]);
 
   if (caseQuery.isLoading) {
     return (
@@ -211,22 +240,33 @@ const AdminFraudCaseDetailPage = () => {
             <button
               type="button"
               onClick={() => {
-                if (!extractVisible) {
+                if (!extract && !extractVisible) {
                   setExtractVisible(true);
-                } else if (!extractQuery.isFetching) {
-                  extractQuery.refetch();
                 }
               }}
-              disabled={extractVisible && extractQuery.isFetching}
+              disabled={Boolean(!extract && extractVisible && extractQuery.isFetching)}
               className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <FontAwesomeIcon
-                icon={extractVisible && extractQuery.isFetching ? faSpinner : faFileLines}
-                spin={extractVisible && extractQuery.isFetching}
+                icon={!extract && extractVisible && extractQuery.isFetching ? faSpinner : faFileLines}
+                spin={!extract && extractVisible && extractQuery.isFetching}
               />
               {currentCase.register_extract_status === "complete" || extract
                 ? "View Register Data"
                 : "Fetch Register Extract"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => refreshMutation.mutate()}
+              disabled={refreshMutation.isPending}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FontAwesomeIcon
+                icon={refreshMutation.isPending ? faSpinner : faFileLines}
+                spin={refreshMutation.isPending}
+              />
+              Refresh Data
             </button>
 
             <button
@@ -340,7 +380,7 @@ const AdminFraudCaseDetailPage = () => {
 
         {extractVisible && (
           <div className="mt-8 space-y-6">
-            {extractQuery.isLoading || extractQuery.isFetching ? (
+            {!extract && (extractQuery.isLoading || extractQuery.isFetching) ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
                 <FontAwesomeIcon icon={faSpinner} spin className="text-2xl text-primary-500" />
               </div>
