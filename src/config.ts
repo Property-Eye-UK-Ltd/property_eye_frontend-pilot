@@ -7,6 +7,7 @@ export const ENDPOINTS = {
     SIGNUP: "/auth/signup",
     LOGOUT: "/auth/logout",
     ME: "/auth/me",
+    CHANGE_PASSWORD: "/auth/change-password",
   },
   AGENCY: {
     LIST: "/agencies",

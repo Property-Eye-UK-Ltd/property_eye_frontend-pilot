@@ -210,7 +210,13 @@ const AdminFraudCaseDetailPage = () => {
           <div className="print-hide flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setExtractVisible(true)}
+              onClick={() => {
+                if (!extractVisible) {
+                  setExtractVisible(true);
+                } else if (!extractQuery.isFetching) {
+                  extractQuery.refetch();
+                }
+              }}
               disabled={extractVisible && extractQuery.isFetching}
               className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >

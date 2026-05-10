@@ -74,7 +74,6 @@ const Admin = () => {
     },
     onSuccess: () => {
       toast.success('Official record restored and processing restarted.');
-      handleCloseModal();
       queryClient.invalidateQueries({ queryKey: ['ppd-uploads'] });
     },
     onError: (error: any) => {
@@ -144,6 +143,11 @@ const Admin = () => {
       uploadId: activeJob.upload_id,
       formData,
     });
+    setIsModalOpen(false);
+    setFile(null);
+    setActiveJob(null);
+    setModalMode('upload');
+    toast('Restore queued. Processing will continue in the background.');
   };
 
   const openUploadModal = () => {
