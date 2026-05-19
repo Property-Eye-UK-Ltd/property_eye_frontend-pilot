@@ -7,16 +7,12 @@ import AuthShell from "../components/layout/AuthShell";
 import { useAuth } from "../context/AuthContext";
 
 const AdminLogin = () => {
-  const { isAdminAuthenticated, adminLogin, isAuthenticated } = useAuth();
+  const { isAdminAuthenticated, adminLogin } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
 
   if (isAdminAuthenticated) {
     return <Navigate to="/admin" replace />;

@@ -27,14 +27,10 @@ const ProtectedRoute = () => {
 };
 
 const AdminProtectedRoute = () => {
-  const { isAuthenticated, isLoading, isAdminAuthenticated } = useAuth();
+  const { isLoading, isAdminAuthenticated } = useAuth();
 
   if (isLoading) {
     return <LoadingScreen />;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
   }
 
   return isAdminAuthenticated ? <Outlet /> : <Navigate to="/admin/login" replace />;
@@ -46,6 +42,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Layout />}>
@@ -53,15 +50,15 @@ function App() {
             <Route path="upload" element={<Upload />} />
             <Route path="reports" element={<Reports />} />
           </Route>
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route element={<AdminProtectedRoute />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminHome />} />
-              <Route path="records" element={<Admin />} />
-              <Route path="fraud-cases" element={<AdminFraudCases />} />
-              <Route path="fraud-cases/:reportId" element={<AdminFraudCaseDetailPage />} />
-              <Route path="alto" element={<AdminAlto />} />
-            </Route>
+        </Route>
+
+        <Route element={<AdminProtectedRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminHome />} />
+            <Route path="records" element={<Admin />} />
+            <Route path="fraud-cases" element={<AdminFraudCases />} />
+            <Route path="fraud-cases/:reportId" element={<AdminFraudCaseDetailPage />} />
+            <Route path="alto" element={<AdminAlto />} />
           </Route>
         </Route>
       </Routes>

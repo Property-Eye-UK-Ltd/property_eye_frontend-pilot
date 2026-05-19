@@ -9,12 +9,14 @@ import {
   faSignOutAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import clsx from "clsx";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import PropertyEyeMark from "./PropertyEyeMark";
 
 const AdminSidebar = () => {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { user, adminLogout } = useAuth();
 
   const navItems = [
     { path: "/admin", label: "Admin Home", icon: faHome, end: true },
@@ -61,11 +63,14 @@ const AdminSidebar = () => {
         <div className="rounded-lg bg-slate-900 p-4">
           <p className="mb-1 text-xs text-slate-400">Signed in as</p>
           <p className="truncate text-sm font-semibold">
-            {user?.agency_name || "Loading..."}
+            {user?.agency_name || "Administrator"}
           </p>
         </div>
         <button
-          onClick={logout}
+          onClick={() => {
+            adminLogout();
+            navigate("/admin/login", { replace: true });
+          }}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
         >
           <FontAwesomeIcon icon={faSignOutAlt} className="w-5" />
